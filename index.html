@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title></title>
+	<style type="text/css" media="all">
+		* {
+			padding: 0;
+			margin: 0;
+			box-sizing: border-box;
+		}
+	</style>
+</head>
+
+<body>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.1/p5.min.js"></script>
+	<script>
+		let fractalsNames = []
+		class Fractal {
+			constructor(name, axiom, rules, length, genrations, angle, LENGTH_SCALE_FACTOR = 0, translateX = 1, translateY = 2) {
+				fractalsNames.push(name)
+				this.name = name
+				this.axiom = axiom
+				this.rules = rules
+				this.length = length
+				this.genration = genrations
+				this.angle = angle
+				this.LENGTH_SCALE_FACTOR = LENGTH_SCALE_FACTOR
+				this.translateX = translateX
+				this.translateY = translateY
+			}
+		}
+
+		let fractals = [
+    new Fractal('tree', 'a', [
+        ['a', 'F[+x]Fb'],
+        ['F', '>F<'],
+        ['b', 'F[-x]Fa'],
+        ['y', 'b'],
+        ['x', 'a'],
+    ], 1, 15, 45, 1.36),
+
+
+    new Fractal('sticks', 'X', [
+        ['X', 'F[+X]F[-X]+X'],
+        ['F', 'FF'],
+    ], 4, 6, 20, ),
+
+    new Fractal('bushes', 'VZFFF', [
+        ['V', ' [+++W][---W]YV'],
+        ['W', '+X[-W]Z'],
+        ['X', '-W[+X]Z'],
+        ['Y', 'YZ'],
+        ['Z', '[-FFF][+FFF]F'],
+    ], 12, 10, 22.5),
+
+    new Fractal('Sierpinski triangle', 'YF', [
+        ['X', 'YF+XF+Y'],
+        ['Y', 'XF-YF-X'],
+    ], 2, 7, 60, 0, 1.5, 1.5),
+
+    new Fractal('koch snowflake', 'F++F++F', [
+        ['F', 'F-F++F-F'],
+    ], 4, 4, 60, 0, 0.5, 1.75),
+
+    new Fractal('hilbirt curve', 'X', [
+        ['X', '-YF+XFX+FY-'],
+        ['Y', '+XF-YFY-FX+']
+    ], 9, 5, 90, 0, 1.75, 1.75),
+
+        new Fractal('dragon curve', 'FX', [
+        ['X', 'X+YF+'],
+        ['Y', '-FX-Y'],
+    ], 3, 12, 90, 0, 1, 1),
+
+]
+
+		function lSystem(axiom, rules, genrations) {
+			let sentence = axiom
+			for (var i = 0; i < genrations; i++) {
+				let newSentence = ''
+				for (let char of sentence) {
+					let found = false
+					for (let [variable, value] of rules) {
+						if (char == variable) {
+							newSentence += value
+							found = true
+							break
+						}
+					}
+					if (!found) newSentence += char
+				}
+				sentence = newSentence
+			}
+			return sentence
+		}
+
+		let setting = {}
+
+		function setup() {
+			createCanvas(innerWidth, innerHeight)
+			checkbox = createCheckbox('leaf', true);
+			checkbox.position(20, 40)
+			checkbox.changed(() => redraw());
+			sel = createSelect();
+			sel.position(20, 10);
+			for (let name of fractalsNames) sel.option(name);
+			sel.changed(changeFractal);
+			// calling this function to set initial value
+			changeFractal()
+		}
+
+		function draw() {
+			background(200)
+			translate(setting.translateX * width / 2,
+				setting.translateY * height / 2 - 100)
+			let sentence = lSystem(setting.axiom, setting.rules, setting.genration)
+			for (var i = 0; i < sentence.length; i++) {
+				let char = sentence.charAt(i)
+				switch (char) {
+					case 'F':
+						line(0, 0, 0, -setting.length)
+						translate(0, -setting.length)
+						break;
+					case '-':
+						rotate(radians(-setting.angle))
+						break
+					case '+':
+						rotate(radians(setting.angle))
+						break
+					case '[':
+						push()
+						break
+					case ']':
+						if (checkbox.checked()) {
+							fill('green')
+							circle(0, 0, 5)
+						}
+						pop()
+						break
+					case '<':
+						setting.length /= setting.LENGTH_SCALE_FACTOR
+						break
+					case '>':
+						setting.length *= setting.LENGTH_SCALE_FACTOR
+						break
+				}
+			}
+			noLoop()
+		}
+
+		function changeFractal() {
+			let fractalName = sel.value()
+			let fractal
+			//get fractal objects 
+			for (let obj of fractals) {
+				if (fractalName == obj.name) {
+					fractal = obj
+				}
+			}
+			setting = fractal
+			redraw()
+		}
+	</script>
+</body>
+
+</html>
